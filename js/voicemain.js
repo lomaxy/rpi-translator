@@ -6,7 +6,10 @@
 */
 
 //responsivevoice
-const attivazione = "traduci";		// Parola che attiva la traduzione
+const attivazione 		 = "traduci";		    // Parola che attiva la traduzione
+const attivazioneLingua  = "traduci in ";		// Parola che attiva la traduzione selezionando la linga
+const attivazioneAscolto = "e ascolta ";		// Parola chiave per attivare l'ascolto e la traduzione in italiano
+var PrenotazioneAscolto  = false;               // Imposta ascolto dopo parlato
 var RVlangName = "UK English Male"; // Lingua default ResponsiveVoice
 var LinguaDestinazione="inglese";	// Lingua nella quale avviene la traduzione
 var Genere="Male";					// Genere (Male/Female)
@@ -30,6 +33,72 @@ function selgenere(){
 	}
 
 
+function setPaese(lingua) {
+//Cambio del paese
+ switch (lingua) {
+	case "arabo":  //Marocco	 
+	 $("#selPaese").val("MA");
+	 RVlangName="Arabic "+Genere;
+	 LinguaDestinazione="arabo";
+	 break;
+	case "portoghese":  //Brasile	 
+	 $("#selPaese").val("BR");
+	 RVlangName="Portuguese "+Genere;
+	 LinguaDestinazione="portoghese";
+	 break;
+	case "spagnolo":  //Spagna	 
+	 $("#selPaese").val("ES");
+	 RVlangName="Spanish "+Genere;
+	 LinguaDestinazione="spagnolo";
+	 break; 
+	case "francese":  //FRANCIA	 
+	 $("#selPaese").val("FR");
+  	 RVlangName="French "+Genere;
+	 LinguaDestinazione="francese";
+	 break;
+	case "tedesco":  //GERMANIA	 
+	 $("#selPaese").val("DE");
+	 RVlangName="Deutsch "+Genere;
+	 LinguaDestinazione="tedesco";
+	 break;
+	case "giapponese":  //HONG-KONG (Japponese)	 
+	 $("#selPaese").val("HK");
+	 RVlangName="Japanese "+Genere;
+	 LinguaDestinazione="giapponese";
+	 break; 
+	case "olandese":  //Netherland	 
+	 $("#selPaese").val("NL");
+	 RVlangName="Finnish "+Genere;
+	 LinguaDestinazione="olandese";
+	 break; 
+	case "polacco":  //Polonia	 
+	 $("#selPaese").val("PL");
+	 RVlangName="Polish "+Genere;
+	 LinguaDestinazione="polacco";
+	 break;  	 
+	case "russo":  //Russia	 
+	 $("#selPaese").val("RU");
+	 RVlangName="Russian "+Genere;
+	 LinguaDestinazione="russo";
+	 break;  
+	case "cinese":  //Taiwan	 
+	 $("#selPaese").val("TW");
+	 RVlangName="Chinese "+Genere;
+	 LinguaDestinazione="cinese";
+	 break;  
+	case "americano":  //America	 
+	 $("#selPaese").val("US");
+	 RVlangName="US English "+Genere;
+	 LinguaDestinazione="inglese";
+	 break;   
+	case "inglese":  //America	 
+	 $("#selPaese").val("GB");
+	 RVlangName="UK English "+Genere;
+	 LinguaDestinazione="inglese";
+	 break;   	
+	 }
+}
+
 function selPaese() {
  //Cambio del paese
  switch ($("#selPaese").val()) {
@@ -40,6 +109,10 @@ function selPaese() {
 	case "ES":  //Spagna	 
 	 RVlangName="Spanish "+Genere;
 	 LinguaDestinazione="spagnolo";
+	 break; 
+	case "MA":  //Marocco	 
+	 RVlangName="Arabic "+Genere;
+	 LinguaDestinazione="arabo";
 	 break; 
 	case "FR":  //FRANCIA	 
 	 RVlangName="French "+Genere;
@@ -130,19 +203,19 @@ function selPaese() {
 	  function Parla(frase,lRVlangName) {
 	   if (blnAscolta) {
 	    //Emetto la frase nella lingua italiana
-		  blnAscolta=false;	
-		  Parla(fraseTradotta.replace("?", ""),'Italian Female');		
+		  blnAscolta=false;			  
+		  responsiveVoice.speak(fraseTradotta.replace("?", ""),'Italian Female',callbacks);
 		  $("#btnlisten").css("border","none");
 	   } else if (frase.trim != "") {
-	     if (lRVlangName=="") {lRVlangName=RVlangName;}
-	     responsiveVoice.speak(frase,lRVlangName,callbacks);
+	     if (lRVlangName=="") {lRVlangName=RVlangName;}		 
+		  responsiveVoice.speak(frase,lRVlangName,callbacks);
 		 }
 	   }
 	  
 	  
 	  //Emette la frase tradotta
 	  function emetti_frase_tradotta() {
-	    //Emette la frase tradotta    	    
+	    //Emette la frase tradotta   		
 	    Parla(fraseTradotta,"");	  
 	   }
 	  
@@ -181,12 +254,13 @@ function Traduci(frase) {
         ajax.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {			    
 				fraseTradotta=xUnescape(this.responseText);                		
-				$("#txtTradotto").val(fraseTradotta);								
+				$("#txtTradotto").val(fraseTradotta);												
 				Parla(fraseTradotta,"");
             }
         };
-		//Chiamata ajax 
-        ajax.open("GET", "./php/traduttore.php?frase=" +frase+"&lingua="+LinguaDestinazione, true);
+		//Chiamata ajax
+        var lLinguaDestinazione=blnAscolta?"italiano" : LinguaDestinazione;
+        ajax.open("GET", "./php/traduttore.php?frase=" +frase+"&lingua="+lLinguaDestinazione, true);
         ajax.send();
   }
 
@@ -258,8 +332,29 @@ function doRiconoscimentoVocale() {
 	
 	$('#txtSentito').val(speechResult.toLowerCase());	
 	//Chiamo il traduttore
-	if (speechResult.toLowerCase().indexOf(attivazione)!=-1 || blnAscolta ) {
-	 fraseDaTradurre=speechResult.toLowerCase().replace(attivazione, "");
+	if (speechResult.toLowerCase().indexOf(attivazione)!=-1 || blnAscolta ) {	 
+	 //Verifico se è richiesta una specifica lingua
+	 if (speechResult.toLowerCase().indexOf(attivazioneLingua)!=-1)  {
+		 //Lingua di traduzione richiesta
+		 //elido la frase di controllo
+		 LinguaDestinazione=speechResult.toLowerCase().replace(attivazioneLingua, "");
+		 //circoscrivo la sola lingua di destinazione..
+		 LinguaDestinazione=LinguaDestinazione.substr(0, LinguaDestinazione.indexOf(' '));
+		 //.. e la imposto
+		 setPaese(LinguaDestinazione);	
+		 //circoscrivo la frase da tradurre
+		 fraseDaTradurre=speechResult.toLowerCase().replace(attivazioneLingua, "");
+		 fraseDaTradurre=fraseDaTradurre.replace(LinguaDestinazione, "");		 		 		 
+	 } else  {
+		//elido la frase di controllo 
+		fraseDaTradurre=speechResult.toLowerCase().replace(attivazione, "");
+	 }
+		//Verifico se è richiesto l'ascolto
+		if (fraseDaTradurre.toLowerCase().indexOf(attivazioneAscolto)!=-1) {
+			//Imposto ascolto ed elido la parola chiave
+			fraseDaTradurre=fraseDaTradurre.replace(attivazioneAscolto, "");
+			PrenotazioneAscolto=true;			
+		}	 
 	 $("#txtSentito").val(fraseDaTradurre);
 	 Traduci(fraseDaTradurre);
 	} else {
@@ -269,8 +364,13 @@ function doRiconoscimentoVocale() {
   }
 
   riconoscimentoVocale.onspeechend = function() {
-    //Riavvio il riconoscimento vocale
+    //Riavvio il riconoscimento vocale	
     doRiconoscimentoVocale();	
+	if (PrenotazioneAscolto) {
+		PrenotazioneAscolto=false;
+		blnAscolta=false;
+		disponi_ascolto();
+	}
   }
 
   riconoscimentoVocale.onerror = function(event) {    
